@@ -96,7 +96,7 @@ def save_reviews():
 
 @app.route("/")
 def index():
-    return send_file("review_ui.html")
+    return send_file(Path(__file__).resolve().parent / "review_ui.html")
 
 
 @app.route("/api/frames")
