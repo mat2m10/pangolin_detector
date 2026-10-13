@@ -1,1 +1,4 @@
 data/
+
+# Model weights (stock Ultralytics weights are auto-downloaded by YOLO("yolo11n.pt"))
+*.pt
