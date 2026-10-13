@@ -1,6 +1,7 @@
 """Helpers to import the repo's scripts, which are not an installed package."""
 
 import importlib.util
+import sys
 from pathlib import Path
 
 import pytest
@@ -20,6 +21,9 @@ def load_script(filename, attrs=()):
         if path.is_file() and path.stat().st_size > 0:
             spec = importlib.util.spec_from_file_location(path.stem, path)
             module = importlib.util.module_from_spec(spec)
+            # Register before executing, like a normal import, so libraries
+            # that look the module up (e.g. Flask's root_path) find its file.
+            sys.modules[path.stem] = module
             spec.loader.exec_module(module)
             missing = [a for a in attrs if not hasattr(module, a)]
             if missing:
