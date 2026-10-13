@@ -1,1 +1,14 @@
 data/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+
+# Model weights and Ultralytics run output
+*.pt
+runs/
+
+# Windows "downloaded from internet" metadata files (WSL)
+*:Zone.Identifier
