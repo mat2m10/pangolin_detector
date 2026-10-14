@@ -9,20 +9,23 @@ detection helps wildlife monitoring and camera-trap analysis.
 
 ## Status
 
-The data-preparation pipeline works. **No detector has been trained yet**:
-`scripts/train.py`, `scripts/predict.py`, `scripts/evaluate.py`,
-`scripts/prepare_data.py`, `configs/data.yaml` and `app/app.py` are empty
-placeholders.
+The data-preparation pipeline (steps 1-4) and the training, evaluation and
+prediction scripts (step 5) are in place. No trained weights are committed:
+train your own with `scripts/train.py` (results go to the git-ignored
+`runs/` folder).
 
 ## Pipeline
 
-All commands are run from the repository root. Raw data is expected under
-`data/` (gitignored).
+Run the commands from the repository root. Raw data is expected under
+`data/` (git-ignored). The tools in steps 1-3 resolve their default `./data/...`
+paths against the current directory; `scripts/prepare_data.py`,
+`train.py`, `evaluate.py` and `predict.py` resolve theirs against the
+repository root and work from anywhere.
 
 1. **Extract frames** from the camera-trap clips (needs `ffmpeg` on PATH):
 
    ```bash
-   python extract_frames.py --sightings-dir data/Sightings --output-dir data/Frames --fps 1
+   python scripts/extract_frames.py --sightings-dir data/Sightings --output-dir data/Frames --fps 1
    ```
 
    One folder per sighting is written to `data/Frames/`. Compiled
@@ -32,7 +35,7 @@ All commands are run from the repository root. Raw data is expected under
 2. **Pre-filter with MegaDetector V5** (weights download on first run):
 
    ```bash
-   python run_megadetector.py --frames-dir data/Frames --output data/detections.json --conf 0.2
+   python scripts/run_megadetector.py --frames-dir data/Frames --output data/detections.json --conf 0.2
    ```
 
    This writes `data/detections.json` and `data/detections_summary.csv`
@@ -41,7 +44,7 @@ All commands are run from the repository root. Raw data is expected under
 3. **Review frames by hand** in a local web app:
 
    ```bash
-   python review_app.py --frames-dir data/Frames --port 5000
+   python tools/review/review_app.py --frames-dir data/Frames --port 5000
    # open http://localhost:5000
    ```
 
@@ -49,22 +52,35 @@ All commands are run from the repository root. Raw data is expected under
    quality (good / blurry / partial / dark). Results are saved to
    `data/reviews.csv`.
 
-4. **Clean the bounding-box labels and build the YOLO split** in
-   `notebooks/data_exploration.ipynb`. It works on `data/dataset/`
-   (`images/` plus YOLO `labels/`), and:
-   - colours each box and writes `labels_colored/` and `images_annotated/`;
-   - launches `notebooks/review_labels_step2.py`, a matplotlib tool where
-     you click boxes to drop them, which writes `labels_colored_approved/`;
-   - converts the approved labels back to YOLO format in `labels_yolo/`;
-   - makes an 80/20 split into `images/{train,val}` and
-     `labels/{train,val}`, and writes `data/dataset/pangolin.yaml`.
+4. **Clean the bounding-box labels and build the YOLO split** with
+   `scripts/prepare_data.py`. It works on `data/dataset/` (`images/` plus
+   YOLO `labels/`; change it with `--dataset-dir PATH` before the command):
 
-   Run the notebook from the `notebooks/` folder, because it uses
-   `../data/dataset` paths.
+   ```bash
+   python scripts/prepare_data.py colorize --annotate   # labels/ -> labels_colored/ + images_annotated/
+   python scripts/prepare_data.py review                # click boxes to drop them -> labels_colored_approved/
+   python scripts/prepare_data.py to-yolo               # -> labels_yolo/
+   python scripts/prepare_data.py split --val-fraction 0.2 --seed 42
+   python scripts/prepare_data.py stats                 # empty / non-empty / missing labels
+   ```
 
-5. **Train**: not implemented yet. The dataset from step 4 is in standard
-   Ultralytics format, so `yolo detect train data=data/dataset/pangolin.yaml model=yolo11n.pt`
-   is the intended starting point.
+   `review` opens `notebooks/review_labels_step2.py`, a matplotlib tool.
+   `split` copies the image/label pairs into `images/{train,val}` and
+   `labels/{train,val}` and writes `data/dataset/pangolin.yaml`.
+   `notebooks/data_exploration.ipynb` runs the same steps in order.
+
+5. **Train, evaluate and predict** with Ultralytics YOLO, using
+   `configs/data.yaml` (points at the split from step 4):
+
+   ```bash
+   python scripts/train.py --model yolo11n.pt --epochs 100   # -> runs/detect/pangolin/weights/best.pt
+   python scripts/evaluate.py --split val                    # mAP50, mAP50-95, precision, recall
+   python scripts/predict.py path/to/images_or_video         # -> runs/predict/pangolin/
+   ```
+
+   Base weights such as `yolo11n.pt` are downloaded by Ultralytics on first
+   use. Each script has `--help` and a `--dry-run` that checks the config
+   and dataset without training or predicting.
 
 ## Installation
 
@@ -74,30 +90,47 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-`review_app.py` needs `flask` and `run_megadetector.py` needs `megadetector`.
-Install them separately if they are not in `requirements.txt` yet.
+`requirements.txt` pins everything, including `flask` (review app),
+`megadetector` (step 2) and `ultralytics`/`torch` (step 5). `ffmpeg` must be
+installed separately.
+
+## Development
+
+```bash
+pip install ruff pytest
+ruff check .
+pytest -q
+```
+
+CI (`.github/workflows/ci.yml`) runs the same on pushes to master and on pull requests.
 
 ## Repository structure
 
 ```text
 pangolin_detector/
-├── extract_frames.py      # step 1: video -> frames (ffmpeg)
-├── run_megadetector.py    # step 2: MegaDetector V5 pre-filter
-├── review_app.py          # step 3: Flask review app (serves review_ui.html)
-├── review_ui.html
+├── scripts/
+│   ├── extract_frames.py     # step 1: video -> frames (ffmpeg)
+│   ├── run_megadetector.py   # step 2: MegaDetector V5 pre-filter
+│   ├── prepare_data.py       # step 4: label cleaning + YOLO split
+│   ├── train.py              # step 5: train
+│   ├── evaluate.py           # step 5: evaluate
+│   ├── predict.py            # step 5: predict
+│   └── common.py             # shared helpers for train / evaluate / predict
+├── tools/review/
+│   ├── review_app.py         # step 3: Flask review app
+│   └── review_ui.html
+├── configs/data.yaml         # Ultralytics dataset config
 ├── notebooks/
-│   ├── data_exploration.ipynb   # step 4: label cleaning + YOLO split
-│   ├── review_labels_step1.py   # single-image box review prototype
-│   ├── review_labels_step2.py   # box review tool used by the notebook
-│   └── sighting_labels.ipynb    # scratch
-├── scripts/               # placeholders (empty): train / predict / evaluate / prepare_data
-├── configs/data.yaml      # placeholder (empty)
-├── app/app.py             # placeholder (empty)
+│   ├── data_exploration.ipynb    # runs the step 4 commands in order
+│   ├── review_labels_step1.py    # single-image box review prototype
+│   ├── review_labels_step2.py    # box review tool used by `prepare_data.py review`
+│   └── sighting_labels.ipynb     # scratch
+├── tests/                    # pytest smoke tests
 ├── requirements.txt
-└── Makefile               # `make clean` removes Windows *Zone.Identifier files
+└── Makefile                  # `make clean` removes Windows *Zone.Identifier files
 ```
 
-`data/` is gitignored and is not part of the repository.
+`data/` and `runs/` are git-ignored and are not part of the repository.
 
 ## Tech stack
 
