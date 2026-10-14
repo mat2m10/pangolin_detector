@@ -64,7 +64,8 @@ repository root and work from anywhere.
    python scripts/prepare_data.py stats                 # empty / non-empty / missing labels
    ```
 
-   `review` opens `notebooks/review_labels_step2.py`, a matplotlib tool.
+   `review` opens `notebooks/review_labels_step2.py`, a matplotlib tool; it
+   always works on `data/dataset/`, whatever `--dataset-dir` says.
    `split` copies the image/label pairs into `images/{train,val}` and
    `labels/{train,val}` and writes `data/dataset/pangolin.yaml`.
    `notebooks/data_exploration.ipynb` runs the same steps in order.
@@ -79,8 +80,9 @@ repository root and work from anywhere.
    ```
 
    Base weights such as `yolo11n.pt` are downloaded by Ultralytics on first
-   use. Each script has `--help` and a `--dry-run` that checks the config
-   and dataset without training or predicting.
+   use. Each script has `--help` and a `--dry-run`: for `train.py` and
+   `evaluate.py` it checks the config and dataset, for `predict.py` it only
+   prints the weights and source it would use.
 
 ## Installation
 
@@ -90,9 +92,9 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-`requirements.txt` pins everything, including `flask` (review app),
+`requirements.txt` pins the runtime dependencies, including `flask` (review app),
 `megadetector` (step 2) and `ultralytics`/`torch` (step 5). `ffmpeg` must be
-installed separately.
+installed separately, and so does Jupyter if you want to use the notebooks.
 
 ## Development
 
