@@ -94,7 +94,7 @@ pip install -r requirements.txt
 
 `requirements.txt` pins the runtime dependencies, including `flask` (review app),
 `megadetector` (step 2) and `ultralytics`/`torch` (step 5). `ffmpeg` must be
-installed separately, and so does Jupyter if you want to use the notebooks.
+installed separately, and so must Jupyter if you want to use the notebooks.
 
 ## Development
 
