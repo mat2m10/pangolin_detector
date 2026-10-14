@@ -5,7 +5,7 @@ Local web app for reviewing pangolin camera trap frames.
 
 Usage:
     pip install flask
-    python review_app.py [--frames-dir PATH] [--port PORT]
+    python tools/review/review_app.py [--frames-dir PATH] [--port PORT]
 
 Defaults:
     --frames-dir  ./data/Frames
@@ -27,7 +27,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from flask import Flask, jsonify, request, send_file, send_from_directory
+from flask import Flask, abort, jsonify, request, send_file, send_from_directory
 
 app = Flask(__name__)
 
@@ -96,7 +96,7 @@ def save_reviews():
 
 @app.route("/")
 def index():
-    return send_file("review_ui.html")
+    return send_file(Path(__file__).resolve().parent / "review_ui.html")
 
 
 @app.route("/api/frames")
@@ -142,8 +142,15 @@ def api_export():
 
 @app.route("/img/<path:rel_path>")
 def serve_image(rel_path):
-    full = FRAMES_DIR / rel_path
-    return send_from_directory(str(full.parent), full.name)
+    # Only serve files that resolve to a location inside FRAMES_DIR.
+    # rel_path comes from the URL, so "../" segments, absolute paths or
+    # symlinks pointing elsewhere must not escape the frames root.
+    root = FRAMES_DIR.resolve()
+    full = (root / rel_path).resolve()
+    if not full.is_relative_to(root) or not full.is_file():
+        abort(404)
+    # send_from_directory additionally applies werkzeug's safe_join.
+    return send_from_directory(root, full.relative_to(root).as_posix())
 
 
 # ── Main ──────────────────────────────────────────────────

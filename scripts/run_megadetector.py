@@ -5,7 +5,7 @@ Runs MegaDetector V5 over all frames in data/Frames and saves results.
 
 Usage:
     pip install megadetector
-    python run_megadetector.py [--frames-dir PATH] [--output PATH] [--conf FLOAT]
+    python scripts/run_megadetector.py [--frames-dir PATH] [--output PATH] [--conf FLOAT]
 
 Defaults:
     --frames-dir   ./data/Frames

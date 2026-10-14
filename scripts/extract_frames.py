@@ -4,7 +4,7 @@ extract_frames.py
 Extracts frames from all MP4 videos in the Sightings dataset.
 
 Usage:
-    python extract_frames.py [--sightings-dir PATH] [--output-dir PATH] [--fps N] [--dry-run]
+    python scripts/extract_frames.py [--sightings-dir PATH] [--output-dir PATH] [--fps N] [--dry-run]
 
 Defaults:
     --sightings-dir  ./data/Sightings
