@@ -1,0 +1,14 @@
+# Ultralytics YOLO dataset config for the pangolin detector.
+#
+# The split is produced by notebooks/data_exploration.ipynb, which copies the
+# approved image/label pairs into data/dataset/{images,labels}/{train,val}.
+#
+# A relative `path` is resolved against the repository root by
+# scripts/train.py and scripts/evaluate.py, so they work from any directory.
+# When calling the `yolo` CLI directly, run it from the repository root.
+path: data/dataset
+train: images/train
+val: images/val
+
+names:
+  0: pangolin
