@@ -5,7 +5,7 @@ Local web app for reviewing pangolin camera trap frames.
 
 Usage:
     pip install flask
-    python review_app.py [--frames-dir PATH] [--port PORT]
+    python tools/review/review_app.py [--frames-dir PATH] [--port PORT]
 
 Defaults:
     --frames-dir  ./data/Frames
@@ -96,7 +96,7 @@ def save_reviews():
 
 @app.route("/")
 def index():
-    return send_file("review_ui.html")
+    return send_file(Path(__file__).resolve().parent / "review_ui.html")
 
 
 @app.route("/api/frames")
