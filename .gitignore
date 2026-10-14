@@ -1,1 +1,15 @@
 data/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+
+# Model weights (stock Ultralytics weights are auto-downloaded by YOLO("yolo11n.pt"))
+# and Ultralytics run output
+*.pt
+runs/
+
+# Windows "downloaded from internet" metadata files (WSL)
+*:Zone.Identifier

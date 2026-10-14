@@ -1,3 +1,4 @@
+# Core / YOLO training and inference
 numpy==1.26.4
 Pillow==12.1.1
 PyYAML==6.0.3
@@ -5,3 +6,8 @@ torch==2.10.0
 torchvision==0.25.0
 ultralytics==8.4.21
 ultralytics-thop==2.0.18
+
+# Data tooling
+flask==3.1.3          # review_app.py
+matplotlib==3.10.8    # notebooks/review_labels_step*.py
+megadetector==10.0.27 # run_megadetector.py (MDV5A weights download on first run)
