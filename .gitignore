@@ -6,7 +6,8 @@ data/
 # Python
 __pycache__/
 
-# Model weights and Ultralytics run output
+# Model weights (stock Ultralytics weights are auto-downloaded by YOLO("yolo11n.pt"))
+# and Ultralytics run output
 *.pt
 runs/
 
